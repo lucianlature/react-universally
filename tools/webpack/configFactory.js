@@ -78,6 +78,7 @@ function webpackConfigFactory({ target, mode }, { json }) {
   const ifProdClient = ifElse(isProd && isClient);
 
   return {
+    name: target,
     // We need to state that we are targetting "node" for our server bundle.
     target: ifNodeTarget('node', 'web'),
     // We have to set this to be able to use these items when executing a

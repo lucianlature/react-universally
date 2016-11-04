@@ -4,6 +4,9 @@ const notifier = require('node-notifier');
 const colors = require('colors');
 const execSync = require('child_process').execSync;
 const appRootPath = require('app-root-path').toString();
+const express = require('express');
+const createWebpackMiddleware = require('webpack-dev-middleware');
+const createWebpackHotMiddleware = require('webpack-hot-middleware');
 
 // This determines how many threads a HappyPack instance can spin up.
 // See the plugins section of the webpack configuration for more.
@@ -66,6 +69,60 @@ function createNotification(options = {}) {
   }
 }
 
+function compilerIsDone (compiler) {
+  compiler.plugin('compile', () => {
+    createNotification({
+      title: compiler.name,
+      level: 'info',
+      message: 'Building new bundle...',
+    });
+  });
+  return new Promise(function(resolve) {
+    compiler.run(function(err, stats) {
+      if (err) {
+        return reject(err);
+      }
+
+      const jsonStats = stats.toJson();
+      if (jsonStats.errors.length > 0) {
+        const error = new Error(jsonStats.errors[0]);
+        error.errors = jsonStats.errors;
+        error.warnings = jsonStats.warnings;
+        return reject(error);
+      }
+
+      createNotification({
+        title: compiler.name,
+        level: 'info',
+        message: 'Available with latest changes.',
+      });
+      resolve(compiler.name);
+    });
+  });
+}
+
+const expressCreateServer = (compiler, port) => new Promise((resolve) => {
+  // starts the DEV server
+  const app = express();
+  const webpackDevMiddleware = createWebpackMiddleware(compiler, {
+    quiet: true,
+    noInfo: true,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+    },
+    // The path at which the client bundles are served from.  Note: in this
+    // case as we are running a seperate dev server the public path should
+    // be absolute, i.e. including the "http://..."
+    publicPath: compiler.options.output.publicPath,
+  });
+
+  app.use(webpackDevMiddleware);
+  app.use(createWebpackHotMiddleware(compiler));
+  app.listen(port, () => {
+    resolve(app);
+  });
+});
+
 function exec(command) {
   execSync(command, { stdio: 'inherit', cwd: appRootPath });
 }
@@ -77,4 +134,6 @@ module.exports = {
   happyPackPlugin,
   createNotification,
   exec,
+  compilerIsDone,
+  expressCreateServer,
 };
