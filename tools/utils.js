@@ -1,8 +1,8 @@
-const CPU_COUNT = require('os').cpus().length;
 const HappyPack = require('happypack');
 const notifier = require('node-notifier');
 const colors = require('colors');
 const execSync = require('child_process').execSync;
+<<<<<<< HEAD
 const appRootPath = require('app-root-path').toString();
 const express = require('express');
 const createWebpackMiddleware = require('webpack-dev-middleware');
@@ -15,6 +15,9 @@ const happyPackThreadPool = HappyPack.ThreadPool({ // eslint-disable-line new-ca
     ? Math.round(CPU_COUNT / 2)
     : 2,
 });
+=======
+const appRootPath = require('app-root-dir').get();
+>>>>>>> 3fe23cd065b5a33a5b6485c561bbdf18b9667f71
 
 // Generates a HappyPack plugin.
 // @see https://github.com/amireh/happypack/
@@ -22,7 +25,7 @@ function happyPackPlugin({ name, loaders }) {
   return new HappyPack({
     id: name,
     verbose: false,
-    threadPool: happyPackThreadPool,
+    threads: 4,
     loaders,
   });
 }
