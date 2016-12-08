@@ -8,7 +8,7 @@ It provides you with the build tooling and configuration you need to kick off yo
 
 ## What is Styletron?
 
-Styletron is a universal CSS-in-JS engine built from the ground up for high-performance. Features include:
+[Styletron](http://styletron.js.org/) is a universal CSS-in-JS engine built from the ground up for high-performance. Features include:
 
 #### Advanced critical rendering path optimization of server-rendered pages
 - Dynamic generation of inlineable critical stylesheets with minimum possible size and parse times
