@@ -6,6 +6,8 @@ This is the `incubator/stylesheets/styletron` branch of the `react-universally` 
 
 It provides you with the build tooling and configuration you need to kick off your next universal react project with full support for Styletron.
 
+Look into `Header` and `Menu` components to check how the wrappers for these are styled using Styletron.
+
 ## What is Styletron?
 
 [Styletron](http://styletron.js.org/) is a universal CSS-in-JS engine built from the ground up for high-performance. Features include:
