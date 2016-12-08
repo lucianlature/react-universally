@@ -927,6 +927,10 @@ boom@2.x.x:
   dependencies:
     hoek "2.x.x"
 
+bowser@^1.0.0:
+  version "1.6.0"
+  resolved "https://registry.yarnpkg.com/bowser/-/bowser-1.6.0.tgz#37fc387b616cb6aef370dab4d6bd402b74c5c54d"
+
 brace-expansion@^1.0.0:
   version "1.1.6"
   resolved "https://registry.yarnpkg.com/brace-expansion/-/brace-expansion-1.1.6.tgz#7197d7eaa9b87e648390ea61fc66c84427420df9"
@@ -2608,6 +2612,10 @@ https-browserify@0.0.1:
   version "0.0.1"
   resolved "https://registry.yarnpkg.com/https-browserify/-/https-browserify-0.0.1.tgz#3f91365cabe60b77ed0ebba24b454e3e09d95a82"
 
+hyphenate-style-name@^1.0.1:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/hyphenate-style-name/-/hyphenate-style-name-1.0.2.tgz#31160a36930adaf1fc04c6074f7eb41465d4ec4b"
+
 iconv-lite@~0.4.13:
   version "0.4.15"
   resolved "https://registry.yarnpkg.com/iconv-lite/-/iconv-lite-0.4.15.tgz#fe265a218ac6a57cfe854927e9d04c19825eddeb"
@@ -2658,6 +2666,13 @@ inherits@2.0.1:
 ini@~1.3.0:
   version "1.3.4"
   resolved "https://registry.yarnpkg.com/ini/-/ini-1.3.4.tgz#0537cb79daf59b59a1a517dff706c86ec039162e"
+
+inline-style-prefixer@^2.0.1:
+  version "2.0.5"
+  resolved "https://registry.yarnpkg.com/inline-style-prefixer/-/inline-style-prefixer-2.0.5.tgz#c153c7e88fd84fef5c602e95a8168b2770671fe7"
+  dependencies:
+    bowser "^1.0.0"
+    hyphenate-style-name "^1.0.1"
 
 inquirer@^0.12.0:
   version "0.12.0"
@@ -4644,11 +4659,23 @@ styletron-core@^2.1.2:
   version "2.1.2"
   resolved "https://registry.yarnpkg.com/styletron-core/-/styletron-core-2.1.2.tgz#553f9b439c04cf3945c3cc4c700cc15ce1461424"
 
+styletron-react:
+  version "2.1.2"
+  resolved "https://registry.yarnpkg.com/styletron-react/-/styletron-react-2.1.2.tgz#4ef9a2522020bf4feeea1b2a9a6d4fbbbee0c39e"
+  dependencies:
+    styletron-utils "^2.1.0"
+
 styletron-server@^2.1.2:
   version "2.1.2"
   resolved "https://registry.yarnpkg.com/styletron-server/-/styletron-server-2.1.2.tgz#e057c7cbc600e334c874c833455983a5583778b4"
   dependencies:
     styletron-core "^2.1.2"
+
+styletron-utils@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/styletron-utils/-/styletron-utils-2.1.0.tgz#241394995af6fd8574404e6b3f8bf98ee4215beb"
+  dependencies:
+    inline-style-prefixer "^2.0.1"
 
 supports-color@^0.2.0:
   version "0.2.0"

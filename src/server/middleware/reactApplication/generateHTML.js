@@ -34,6 +34,7 @@ function scriptTags(jsFilePaths : Array<string>) {
 
 type Args = {
   app?: string,
+  stylesForHead?: string,
   initialState?: Object,
   nonce: string,
   helmet?: Head,
@@ -41,7 +42,7 @@ type Args = {
 };
 
 export default function generateHTML(args: Args) {
-  const { app, initialState, nonce, helmet, codeSplitState } = args;
+  const { app, stylesForHead, initialState, nonce, helmet, codeSplitState } = args;
 
   // The chunks that we need to fetch the assets (js/css) for and then include
   // said assets as script/style tags within our html.
@@ -79,6 +80,7 @@ export default function generateHTML(args: Args) {
         ${helmet ? helmet.meta.toString() : ''}
         ${helmet ? helmet.link.toString() : ''}
         ${styleTags(assetsForRender.css)}
+        ${ stylesForHead }
         ${helmet ? helmet.style.toString() : ''}
       </head>
       <body>
