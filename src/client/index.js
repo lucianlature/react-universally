@@ -5,11 +5,17 @@ import React from 'react';
 import { render } from 'react-dom';
 import { BrowserRouter } from 'react-router';
 import { CodeSplitProvider, rehydrateState } from 'code-split-component';
+import Styletron from 'styletron-client';
+import { StyletronProvider } from 'styletron-react';
 import ReactHotLoader from './components/ReactHotLoader';
 import App from '../shared/components/App';
 
 // Get the DOM Element that will host our React application.
 const container = document.querySelector('#app');
+
+// Get the hydrated styles generated initially by the server through SSR
+const styletronHydratedElement = document.getElementsByClassName('_styletron_hydrate_');
+const styletron = new Styletron(styletronHydratedElement);
 
 function renderApp(TheApp) {
   // We use the code-split-component library to provide us with code splitting
@@ -26,7 +32,9 @@ function renderApp(TheApp) {
       <ReactHotLoader>
         <CodeSplitProvider state={codeSplitState}>
           <BrowserRouter>
-            <TheApp />
+            <StyletronProvider styletron={styletron}>
+              <TheApp />
+            </StyletronProvider>    
           </BrowserRouter>
         </CodeSplitProvider>
       </ReactHotLoader>,
