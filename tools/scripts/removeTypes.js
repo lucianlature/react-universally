@@ -1,10 +1,12 @@
-const globSync = require('glob').sync;
-const path = require('path');
-const appRootPath = require('app-root-path').toString();
-const flowRemoveTypes = require('flow-remove-types');
-const fs = require('fs');
-const rimraf = require('rimraf');
-const { exec } = require('../utils');
+/* @flow */
+
+import { sync as globSync } from 'glob';
+import path from 'path';
+import appRootDir from 'app-root-dir';
+import flowRemoveTypes from 'flow-remove-types';
+import fs from 'fs';
+import rimraf from 'rimraf';
+import { exec } from '../utils';
 
 function safeDelete(target, cb) {
   if (fs.existsSync(target)) {
@@ -19,18 +21,29 @@ function safeDelete(target, cb) {
   }
 }
 
-const srcPath = path.resolve(appRootPath, 'src');
-const flowConfigPath = path.resolve(appRootPath, '.flowconfig');
-const packageJsonPath = path.resolve(appRootPath, 'package.json');
-const flowToolsPath = path.resolve(appRootPath, 'tools/flow');
-const flowTypesPath = path.resolve(appRootPath, 'src/shared/universal/types');
-const flowScriptPath = path.resolve(appRootPath, 'tools/scripts/flow.js');
-
-const isJsFile = file => path.extname(file) === '.js';
+const srcPaths = [
+  path.resolve(appRootDir.get(), './src'),
+  path.resolve(appRootDir.get(), './tools'),
+  path.resolve(appRootDir.get(), './config'),
+];
+const flowTypesPaths = [
+  path.resolve(appRootDir.get(), './src/shared/types'),
+  path.resolve(appRootDir.get(), './tools/types.js'),
+];
+const flowConfigPath = path.resolve(appRootDir.get(), './.flowconfig');
+const packageJsonPath = path.resolve(appRootDir.get(), './package.json');
+const flowToolsPath = path.resolve(appRootDir.get(), './tools/flow');
+const flowScriptPath = path.resolve(appRootDir.get(), './tools/scripts/flow.js');
 
 // Strip the flow types from our src files.
-globSync(`${path.resolve(appRootPath, 'src')}/**/*.js`)
-  .filter(isJsFile)
+srcPaths
+  // Get all the files.
+  .reduce((acc, cur) =>
+    acc
+      .concat(globSync(path.resolve(cur, './**/*.js')))
+      .concat(globSync(path.resolve(cur, './**/*.jsx')))
+  , [])
+  // Remoe the types from each file.
   .forEach((file) => {
     console.log(`Removing types from "${file}`);
     const input = fs.readFileSync(file, 'utf8');
@@ -42,16 +55,23 @@ globSync(`${path.resolve(appRootPath, 'src')}/**/*.js`)
       // Remove any blank lines at top of file.
       .replace(/^\n+/, '')
       // Remove any multiple blank lines in files.
-      .replace(/\n\n\n/g, '\n\n');
+      .replace(/\n\n+/g, '\n\n');
     fs.writeFileSync(file, output);
   });
 
-// Delete the types folder in the src
-safeDelete(
-  flowTypesPath,
+Promise
+  // Delete the types folders.
+  .all(
+    flowTypesPaths.map(typesPath => new Promise((resolve) => {
+      safeDelete(typesPath, resolve);
+    })),
+  )
   // Then do an eslint fix parse on the src files.
-  () => exec(`eslint --fix ${srcPath}`)
-);
+  .then(() => {
+    srcPaths.forEach((srcPath) => {
+      exec(`eslint --fix ${srcPath}`);
+    });
+  });
 
 // Remove the .flowconfig
 safeDelete(flowConfigPath);
@@ -70,5 +90,5 @@ fs.writeFileSync(
     // Remove any multiple blank lines in files.
     .replace(/\n\n+/g, '\n')
     // Fix any hanging ',' chars
-    .replace(/,+([\s\n]+)\}/g, '$1}')
+    .replace(/,+([\s\n]+)\}/g, '$1}'),
 );

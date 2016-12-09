@@ -1,165 +1,143 @@
-const pathResolve = require('path').resolve;
-const chokidar = require('chokidar');
-const webpack = require('webpack');
-const { createNotification } = require('../utils');
-const HotServer = require('./hotServer');
-const HotClient = require('./hotClient');
-const ensureVendorDLLExists = require('./ensureVendorDLLExists');
-const vendorDLLPaths = require('../config/vendorDLLPaths');
-const envVars = require('../config/envVars');
+/* @flow */
+
+import { resolve as pathResolve } from 'path';
+import chokidar from 'chokidar';
+import webpack from 'webpack';
+import appRootDir from 'app-root-dir';
+import { createNotification } from '../utils';
+import HotNodeServer from './hotNodeServer';
+import HotClientServer from './hotClientServer';
+import createVendorDLL from './createVendorDLL';
+import webpackConfigFactory from '../webpack/configFactory';
+import projConfig from '../../config/private/project';
+
+const usesDevVendorDLL = bundleConfig =>
+  bundleConfig.devVendorDLL != null && bundleConfig.devVendorDLL.enabled;
+
+const vendorDLLsFailed = (err) => {
+  createNotification({
+    title: 'vendorDLL',
+    level: 'error',
+    message: 'Unfortunately an error occured whilst trying to build the vendor dll(s) used by the development server. Please check the console for more information.',
+  });
+  if (err) {
+    console.log(err);
+  }
+};
+
+const initializeBundle = (name, bundleConfig) => {
+  try {
+    const createCompiler = () => {
+      const webpackConfig = webpackConfigFactory({
+        target: name,
+        mode: 'development',
+      });
+      // Install the vendor DLL config for the client bundle if required.
+      if (name === 'client' && usesDevVendorDLL(bundleConfig)) {
+        // Install the vendor DLL plugin.
+        webpackConfig.plugins.push(
+          new webpack.DllReferencePlugin({
+            // $FlowFixMe
+            manifest: require(
+              pathResolve(
+                appRootDir.get(),
+                bundleConfig.outputPath,
+                `${bundleConfig.devVendorDLL.name}.json`,
+              ),
+            ),
+          }),
+        );
+      }
+      return webpack(webpackConfig);
+    };
+    return { name, bundleConfig, createCompiler };
+  } catch (err) {
+    createNotification({
+      title: 'development',
+      level: 'error',
+      message: 'Webpack bundleConfigs are invalid, please check the console for more information.',
+    });
+    console.log(err);
+    throw err;
+  }
+};
 
 class HotDevelopment {
+  hotNodeServers: Array<HotNodeServer>;
+  hotClientServer: ?HotClientServer;
+
   constructor() {
-    ensureVendorDLLExists().then(() => {
-      try {
-        const clientConfigFactory = require('../webpack/client.config');
-        const clientConfig = clientConfigFactory({ mode: 'development' });
+    this.hotClientServer = null;
+    this.hotNodeServers = [];
 
-        if (envVars.USE_DEV_DLL === 'true') {
-          // Install the vendor DLL plugin.
-          clientConfig.plugins.push(
-            new webpack.DllReferencePlugin({
-              manifest: require(vendorDLLPaths.dllJsonPath),
-            })
-          );
-        }
+    const clientBundle = initializeBundle('client', projConfig.bundles.client);
 
-        this.clientCompiler = webpack(clientConfig);
+    const nodeBundles = [initializeBundle('server', projConfig.bundles.server)]
+      .concat(Object.keys(projConfig.additionalNodeBundles).map(name =>
+        initializeBundle(name, projConfig.additionalNodeBundles[name]),
+      ));
 
-        const middlewareConfigFactory = require('../webpack/universalMiddleware.config');
-        const middlewareConfig = middlewareConfigFactory({ mode: 'development' });
-        this.middlewareCompiler = webpack(middlewareConfig);
-
-        const serverConfigFactory = require('../webpack/server.config');
-        const serverConfig = serverConfigFactory({ mode: 'development' });
-        this.serverCompiler = webpack(serverConfig);
-      } catch (err) {
-        createNotification({
-          title: 'development',
-          level: 'error',
-          message: 'Webpack configs are invalid, please check the console for more information.',
-        });
-        console.log(err);
-        return;
-      }
-
-      this.prepHotServer();
-      this.prepHotUniversalMiddleware();
-      this.prepHotClient();
-    }).catch((err) => {
-      createNotification({
-        title: 'vendorDLL',
-        level: 'error',
-        message: 'Unfortunately an error occured whilst trying to build the vendor dll used by the development server. Please check the console for more information.',
-      });
-      if (err) {
-        console.log(err);
-      }
-    });
-  }
-
-  prepHotClient() {
-    this.clientBundle = new HotClient(this.clientCompiler);
-  }
-
-  prepHotUniversalMiddleware() {
-    let started = false;
-
-    const runMiddlewareCompiler = () => {
-      this.middlewareCompiler.watch({}, () => undefined);
-    };
-
-    this.clientCompiler.plugin('done', (stats) => {
-      if (!stats.hasErrors() && !started) {
-        started = true;
-        runMiddlewareCompiler();
-      }
-    });
-
-    this.middlewareCompiler.plugin('compile', () => {
-      createNotification({
-        title: 'universalMiddleware',
-        level: 'info',
-        message: 'Building new bundle...',
-      });
-    });
-
-    this.middlewareCompiler.plugin('done', (stats) => {
-      if (!stats.hasErrors()) {
-        // Make sure our newly built bundle is removed from the module cache.
-        Object.keys(require.cache).forEach((modulePath) => {
-          if (modulePath.indexOf('universalMiddleware') !== -1) {
-            delete require.cache[modulePath];
+    Promise
+      // First ensure the client dev vendor DLLs is created if needed.
+      .resolve(
+        usesDevVendorDLL(projConfig.bundles.client)
+          ? createVendorDLL('client', projConfig.bundles.client)
+          : true,
+      )
+      // Then start the client development server.
+      .then(() => new Promise((resolve) => {
+        const { createCompiler } = clientBundle;
+        const compiler = createCompiler();
+        compiler.plugin('done', (stats) => {
+          if (!stats.hasErrors()) {
+            resolve();
           }
         });
-
-        createNotification({
-          title: 'universalMiddleware',
-          level: 'info',
-          message: 'Available with latest changes.',
-        });
-      } else {
-        createNotification({
-          title: 'universalMiddleware',
-          level: 'error',
-          message: 'Build failed, please check the console for more information.',
-        });
-        console.log(stats.toString());
-      }
-    });
-  }
-
-  prepHotServer() {
-    let clientBuilt = false;
-    let middlewareBuilt = false;
-    let started = false;
-
-    const startServerBundleWhenReady = () => {
-      if (!started && (clientBuilt && middlewareBuilt)) {
-        started = true;
-        this.serverBundle = new HotServer(this.serverCompiler);
-      }
-    };
-
-    this.clientCompiler.plugin('done', (stats) => {
-      if (!stats.hasErrors() && !clientBuilt) {
-        clientBuilt = true;
-        startServerBundleWhenReady();
-      }
-    });
-
-    this.middlewareCompiler.plugin('done', (stats) => {
-      if (!stats.hasErrors() && !middlewareBuilt) {
-        middlewareBuilt = true;
-        startServerBundleWhenReady();
-      }
-    });
+        this.hotClientServer = new HotClientServer(compiler);
+      }), vendorDLLsFailed)
+      // Then start the node development server(s).
+      .then(() => {
+        this.hotNodeServers = nodeBundles
+          .map(({ name, createCompiler }) =>
+            new HotNodeServer(name, createCompiler()),
+          );
+      });
   }
 
   dispose() {
-    const safeDisposer = bundle => () => (bundle ? bundle.dispose() : Promise.resolve());
-    const safeDisposeClient = safeDisposer(this.clientBundle);
-    const safeDisposeServer = safeDisposer(this.serverBundle);
+    const safeDisposer = server =>
+      (server ? server.dispose() : Promise.resolve([]));
 
-    return safeDisposeClient()
-      .then(() => console.log('disposed client'))
-      .then(safeDisposeServer);
+    // First the hot client server.
+    return safeDisposer(this.hotClientServer)
+      // Then dispose the hot node server(s).
+      .then(() => Promise.all(this.hotNodeServers.map(safeDisposer)));
   }
 }
 
-const hotDevelopment = new HotDevelopment();
+let hotDevelopment = new HotDevelopment();
 
-// Any changes to our webpack configs should be notified as requiring a restart
-// of the development tool.
+// Any changes to our webpack bundleConfigs should restart the development server.
 const watcher = chokidar.watch(
-  pathResolve(__dirname, '../webpack')
+  pathResolve(__dirname, '../webpack'),
 );
 watcher.on('ready', () => {
   watcher.on('change', () => {
     createNotification({
       title: 'webpack',
       level: 'warn',
-      message: 'Webpack config changed. Please restart your development server to use the latest version of the configs.',
+      message: 'Webpack bundleConfigs have changed. The development server is restarting...',
+    });
+    hotDevelopment.dispose().then(() => {
+      // Make sure our new webpack bundleConfigs aren't in the module cache.
+      Object.keys(require.cache).forEach((modulePath) => {
+        if (modulePath.indexOf('webpack') !== -1) {
+          delete require.cache[modulePath];
+        }
+      });
+
+      // Create a new development server.
+      hotDevelopment = new HotDevelopment();
     });
   });
 });

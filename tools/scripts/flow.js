@@ -1,11 +1,13 @@
-const existsSync = require('fs').existsSync;
-const resolvePath = require('path').resolve;
-const appRootPath = require('app-root-path').toString();
-const { exec, createNotification } = require('../utils');
+/* @flow */
 
-const flowTypedDir = resolvePath(appRootPath, 'flow-typed');
+// Runs flow type checking.
 
-if (!existsSync(flowTypedDir)) {
+import { existsSync } from 'fs';
+import { resolve as resolvePath } from 'path';
+import appRootDir from 'app-root-dir';
+import { exec, createNotification } from '../utils';
+
+if (!existsSync(resolvePath(appRootDir.get(), './flow-typed'))) {
   createNotification({
     title: 'flow',
     level: 'warn',
