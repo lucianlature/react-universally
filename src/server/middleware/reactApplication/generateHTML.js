@@ -40,20 +40,8 @@ type Args = {
   codeSplitState?: { chunks: Array<string>, modules: Array<string> },
 };
 
-/**
- * Generates a full HTML page containing the render output of the given react
- * element.
- *
- * @param  reactAppElement
- *   [Optional] The react element representing our app to be rendered within the page.
- * @param  initialState
- *   [Optional] A state object to be mounted on window.APP_STATE.
- *   Useful for rehydrating state management containers like Redux/Mobx etc.
- *
- * @return The full HTML page in the form of a React element.
- */
-function render(args: RenderArgs) {
-  const { markup, initialState, nonce, helmet, codeSplitState } = args;
+export default function generateHTML(args: Args) {
+  const { app, initialState, nonce, helmet, codeSplitState } = args;
 
   // The chunks that we need to fetch the assets (js/css) for and then include
   // said assets as script/style tags within our html.
@@ -94,13 +82,18 @@ function render(args: RenderArgs) {
         ${helmet ? helmet.style.toString() : ''}
       </head>
       <body>
-        <div id='app'>${markup || ''}</div>
-
-        ${initialState
-           ? inlineScript(`window.APP_STATE=${serialize(initialState)};`)
-           : ''
-         }
-         ${codeSplitState
+        <div id='app'>${app || ''}</div>
+        ${
+          // Bind the initial application state based on the server render
+          // so the client can register the correct initial state for the view.
+          initialState
+            ? inlineScript(`window.APP_STATE=${serialize(initialState)};`)
+            : ''
+        }
+        ${
+          // Bind our code split state so that the client knows which server
+          // rendered modules need to be rehydrated.
+          codeSplitState
             ? inlineScript(`window.${STATE_IDENTIFIER}=${serialize(codeSplitState)};`)
             : ''
         }
