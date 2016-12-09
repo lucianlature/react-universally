@@ -31,7 +31,10 @@
     "universal",
     "javascript",
     "express",
-    "webpack"
+    "webpack",
+    "apollo",
+    "redux",
+    "graphql"
   ],
   "contributors": [
     "Sean Matheson <sean@ctrlplusb.com>",
@@ -43,7 +46,8 @@
     "Joe Kohlmann <kohlmannj@mac.com>",
     "Evgeny Boxer",
     "Alin Porumb",
-    "David Edmondson"
+    "David Edmondson",
+    "Lucian Lature <lucian.lature@gmail.com>"
   ],
   "license": "MIT",
   "bugs": {
