@@ -25,7 +25,7 @@ import serviceWorker from './middleware/serviceWorker';
 import errorHandlers from './middleware/errorHandlers';
 import projConfig from '../../config/private/project';
 import envConfig from '../../config/private/environment';
-import { notEmpty } from '../shared/universal/utils/guards';
+import { notEmpty } from '../shared/utils/guards';
 
 
 // Create our express based server.

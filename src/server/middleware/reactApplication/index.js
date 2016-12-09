@@ -9,16 +9,9 @@ import { ApolloProvider } from 'react-apollo';
 import { renderToStringWithData } from 'react-apollo/server';
 import { CodeSplitProvider, createRenderContext } from 'code-split-component';
 import Helmet from 'react-helmet';
-<<<<<<< HEAD:src/universalMiddleware/index.js
-import render from './render';
-import runTasksForLocation from '../shared/universal/routeTasks/runTasksForLocation';
-import App from '../shared/universal/components/App';
-import configureStore from '../shared/universal/redux/configureStore';
-=======
 import generateHTML from './generateHTML';
 import App from '../../../shared/components/App';
 import envConfig from '../../../../config/private/environment';
->>>>>>> b4cdc94a013f298eba612cecc9420da0dea7fa99:src/server/middleware/reactApplication/index.js
 
 /**
  * An express middleware that is capabable of service our React application,
@@ -48,7 +41,6 @@ function reactApplicationMiddleware(request: $Request, response: $Response) {
     return;
   }
 
-<<<<<<< HEAD:src/universalMiddleware/index.js
   // Create our apollo client.
   const apolloClient = new ApolloClient({
     ssrMode: true,
@@ -161,40 +153,6 @@ function reactApplicationMiddleware(request: $Request, response: $Response) {
       if (process.env.NODE_ENV === 'development') {
         console.log('Finished route tasks', routes); // eslint-disable-line no-console,max-len
       }
-=======
-  // First create a context for <ServerRouter>, which will allow us to
-  // query for the results of the render.
-  const reactRouterContext = createServerRenderContext();
-
-  // We also create a context for our <CodeSplitProvider> which will allow us
-  // to query which chunks/modules were used during the render process.
-  const codeSplitContext = createRenderContext();
-
-  // Create our application and render it into a string.
-  const app = renderToString(
-    <CodeSplitProvider context={codeSplitContext}>
-      <ServerRouter location={request.url} context={reactRouterContext}>
-        <App />
-      </ServerRouter>
-    </CodeSplitProvider>,
-  );
-
-  // Generate the html response.
-  const html = generateHTML({
-    // Provide the full app react element.
-    app,
-    // Nonce which allows us to safely declare inline scripts.
-    nonce,
-    // Running this gets all the helmet properties (e.g. headers/scripts/title etc)
-    // that need to be included within our html.  It's based on the rendered app.
-    // @see https://github.com/nfl/react-helmet
-    helmet: Helmet.rewind(),
-    // We provide our code split state so that it can be included within the
-    // html, and then the client bundle can use this data to know which chunks/
-    // modules need to be rehydrated prior to the application being rendered.
-    codeSplitState: codeSplitContext.getState(),
-  });
->>>>>>> b4cdc94a013f298eba612cecc9420da0dea7fa99:src/server/middleware/reactApplication/index.js
 
       // The tasks are complete! Our redux state will probably contain some
       // data now. :)
@@ -206,8 +164,6 @@ function reactApplicationMiddleware(request: $Request, response: $Response) {
     // No tasks are being executed so we can render and return the response.
     renderApp();
   }
-<<<<<<< HEAD:src/universalMiddleware/index.js
-=======
 
   response
     .status(
@@ -219,7 +175,6 @@ function reactApplicationMiddleware(request: $Request, response: $Response) {
         : 200,
     )
     .send(html);
->>>>>>> b4cdc94a013f298eba612cecc9420da0dea7fa99:src/server/middleware/reactApplication/index.js
 }
 
 export default (reactApplicationMiddleware : Middleware);
