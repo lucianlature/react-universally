@@ -141,6 +141,13 @@ app.use(projConfig.bundles.client.webPath, clientBundle);
 // Note: these will be served off the root (i.e. '/') of our application.
 app.use(express.static(pathResolve(appRootDir.get(), projConfig.publicAssetsPath)));
 
+// Our apollo stack graphql server endpoints.
+app.use('/graphql', bodyParser.json(), apolloExpress({ schema: graphqlSchema }));
+if (process.env.NODE_ENV === 'development') {
+  // Enable the useful graphiql tool for development only.
+  app.use('/graphiql', graphiqlExpress({ endpointURL: '/graphql' }));
+}
+
 // The React application middleware.
 app.get('*', reactApplication);
 
