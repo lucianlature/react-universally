@@ -132,7 +132,7 @@ export default function webpackConfigFactory(buildOptions: BuildOptions) {
       //   import server from './build/server';
       index: removeEmpty([
         // Required to support hot reloading of our client.
-        ifDevClient('react-hot-loader/patch'),
+        // ifDevClient('react-hot-loader/patch'),
         // Required to support hot reloading of our client.
         ifDevClient(() => `webpack-hot-middleware/client?reload=true&path=http://${config.host}:${config.clientDevServerPort}/__webpack_hmr`),
         // We are using polyfill.io instead of the very heavy babel-polyfill.
@@ -186,6 +186,7 @@ export default function webpackConfigFactory(buildOptions: BuildOptions) {
     resolve: {
       // These extensions are tried when resolving a file.
       extensions: config.bundleSrcTypes.map(ext => `.${ext}`),
+      alias: config.bundleAliases || null,
     },
 
     plugins: removeEmpty([
