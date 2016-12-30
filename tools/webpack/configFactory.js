@@ -490,6 +490,8 @@ export default function webpackConfigFactory(buildOptions: BuildOptions) {
               path.resolve(appRootDir.get(), srcPath),
             ),
             ifProdClient(path.resolve(appRootDir.get(), 'src/html')),
+            // preact-compat has some es6 requirements. :)
+            // path.resolve(appRootDir.get(), './node_modules/preact-compat'),
           ]),
         },
 

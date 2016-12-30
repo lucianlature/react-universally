@@ -62,6 +62,9 @@ function createVendorDLL(bundleName : string, bundleConfig : Object) {
           name: dllConfig.name,
         }),
       ],
+      resolve: {
+        alias: config.bundleAliases || null,
+      },
     };
   }
 
