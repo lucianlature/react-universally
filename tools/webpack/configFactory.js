@@ -39,7 +39,7 @@ export default function webpackConfigFactory(buildOptions: BuildOptions) {
   const isServer = target === 'server';
   const isNode = !isClient; // Any bundle but the client bundle must target node.
 
-  // Preconfigure some ifElse helper instnaces. See the util docs for more
+  // Preconfigure some ifElse helper instances. See the util docs for more
   // information on how this util works.
   const ifDev = ifElse(isDev);
   const ifProd = ifElse(isProd);
@@ -545,7 +545,7 @@ export default function webpackConfigFactory(buildOptions: BuildOptions) {
             // paths used on the client.
             publicPath: isDev
               // When running in dev mode the client bundle runs on a
-              // seperate port so we need to put an absolute path here.
+              // separate port so we need to put an absolute path here.
               ? `http://${config.host}:${config.clientDevServerPort}${config.bundles.client.webPath}`
               // Otherwise we just use the configured web path for the client.
               : config.bundles.client.webPath,

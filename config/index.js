@@ -258,6 +258,8 @@ const config = {
           'helmet',
           'hpp',
           'offline-plugin',
+          'module-alias',
+          'preact-render-to-string',
           'serialize-javascript',
           'source-map-support',
           'uuid',

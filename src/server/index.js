@@ -1,6 +1,8 @@
 /* @flow */
 /* eslint-disable no-console */
 
+// import 'module-alias/register';
+
 // This grants us source map support, which combined with our webpack source
 // maps will give us nice stack traces.
 import 'source-map-support/register';

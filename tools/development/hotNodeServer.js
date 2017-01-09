@@ -29,7 +29,6 @@ class HotNodeServer {
           message: 'Restarting server...',
         });
       }
-
       const newServer = spawn('node', [compiledEntryFile]);
 
       log({
