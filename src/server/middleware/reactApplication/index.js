@@ -1,4 +1,3 @@
-/* @flow */
 
 import 'module-alias/register';
 import type { $Request, $Response, Middleware } from 'express';
@@ -16,7 +15,7 @@ import config from '../../../../config';
  * An express middleware that is capabable of service our React application,
  * supporting server side rendering of the application.
  */
-function reactApplicationMiddleware(request: $Request, response: $Response) {
+function reactApplicationMiddleware(request, response) {
   // We should have had a nonce provided to us.  See the server/index.js for
   // more information on what this is.
   if (typeof response.locals.nonce !== 'string') {
@@ -28,7 +27,8 @@ function reactApplicationMiddleware(request: $Request, response: $Response) {
   // In this case traditional client side only rendering will occur.
   if (config.disableSSR) {
     if (process.env.NODE_ENV === 'development') {
-      console.log('==> Handling react route without SSR');  // eslint-disable-line no-console
+      // eslint-disable-next-line no-console
+      console.log('==> Handling react route without SSR');
     }
     // SSR is disabled so we will just return an empty html page and will
     // rely on the client to initialize and render the react application.
@@ -84,7 +84,6 @@ function reactApplicationMiddleware(request: $Request, response: $Response) {
     return;
   }
 
-
   response
     .status(
       renderResult.missed
@@ -97,4 +96,4 @@ function reactApplicationMiddleware(request: $Request, response: $Response) {
     .send(html);
 }
 
-export default (reactApplicationMiddleware : Middleware);
+export default (reactApplicationMiddleware);

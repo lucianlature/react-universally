@@ -1,15 +1,13 @@
-/* @flow */
-
 // Application Configuration.
 //
-// Please see the /docs/ApplicationConfig.md documentation for more info.
+// Please see the /docs/APPLICATION_CONFIG.md documentation for more info.
 //
 // Note: all file/folder paths should be relative to the project root. The
 // absolute paths should be resolved during runtime by our build tools/server.
 
 import { getStringEnvVar, getIntEnvVar } from './internals/environmentVars';
 import filterObject from './internals/filterObject';
-import type { BuildOptions } from '../tools/types';
+
 
 // This protects us from accidentally including this configuration in our
 // client bundle. That would be a big NO NO to do. :)
@@ -96,15 +94,16 @@ const config = {
   // Extended configuration for the Content Security Policy (CSP)
   // @see src/server/middleware/security for more info.
   cspExtensions: {
+    childSrc: [],
+    connectSrc: [],
     defaultSrc: [],
+    fontSrc: [],
+    imgSrc: [],
+    mediaSrc: [],
+    manifestSrc: [],
+    objectSrc: [],
     scriptSrc: [],
     styleSrc: [],
-    imgSrc: [],
-    connectSrc: [],
-    fontSrc: [],
-    objectSrc: [],
-    mediaSrc: [],
-    childSrc: [],
   },
 
   // node_modules are not included in any bundles that target "node" as a runtime
@@ -231,13 +230,19 @@ const config = {
         // Enabled?
         enabled: true,
 
-        // It is also possible that some modules require specific
+        // Specify any dependencies that you would like to include in the
+        // Vendor DLL.
+        //
+        // NOTE: It is also possible that some modules require specific
         // webpack loaders in order to be processed (e.g. CSS/SASS etc).
-        // For these cases you don't want to include them in the vendor dll,
-        // which has a very simple loader configuration.
-        // Add the respective modules to the ignores list below to ensure
-        // that they don't get bundled into the vendor DLL.
-        ignores: ['normalize.css/normalize.css'],
+        // For these cases you don't want to include them in the Vendor DLL.
+        include: [
+          'code-split-component',
+          'react',
+          'react-dom',
+          'react-helmet',
+          'react-router',
+        ],
 
         // Which libaries should be excluded when interpreting the package.json
         // dependencies?
@@ -265,10 +270,6 @@ const config = {
           'uuid',
           'user-home',
         ],
-
-        // Specify any additional dependencies that you would like to
-        // explicitly include.
-        include: [],
 
         // The name of the vendor DLL.
         name: '__dev_vendor_dll__',
@@ -324,87 +325,24 @@ const config = {
   // configuration adjustments.  Additionally it helps to make merging
   // from the origin starter kit a bit easier.
   plugins: {
-    // This is used to resolve the babel configuration used to transpile the
-    // source bundles for development/production modes.
+    // This plugin allows you to provide final adjustments your babel
+    // configurations for each bundle before they get processed.
     //
-    // Please use the provided values and then ensure that you return the
-    // appropriate values for the given target and mode.
-    babelConfig: (buildOptions : BuildOptions) => {
+    // This function will be called once for each for your bundles.  It will be
+    // provided the current webpack config, as well as the buildOptions which
+    // detail which bundle and mode is being targetted for the current function run.
+    babelConfig: (babelConfig, buildOptions) => {
+      // eslint-disable-next-line no-unused-vars
       const { target, mode } = buildOptions;
 
-      return {
-        // We need to ensure that we do this otherwise the babelrc will
-        // get interpretted and for the current configuration this will mean
-        // that it will kill our webpack treeshaking feature as the modules
-        // transpilation has not been disabled within in.
-        babelrc: false,
+      // Example
+      /*
+      if (target === 'server' && mode === 'development') {
+        babelConfig.presets.push('foo');
+      }
+     */
 
-        presets: [
-          // JSX
-          'react',
-          // Stage 3 javascript syntax.
-          // "Candidate: complete spec and initial browser implementations."
-          // Add anything lower than stage 3 at your own risk. :)
-          'stage-3',
-          // For our client bundles we transpile all the latest ratified
-          // ES201X code into ES5, safe for browsers.  We exclude module
-          // transilation as webpack takes care of this for us, doing
-          // tree shaking in the process.
-          target === 'client'
-            ? ['latest', { es2015: { modules: false } }]
-            : null,
-          // For our server bundle we use the awesome babel-preset-env which
-          // acts like babel-preset-latest in that it supports the latest
-          // ratified ES201X syntax, however, it will only transpile what
-          // is necessary for a target environment.  We have configured it
-          // to target our current node version.  This is cool because
-          // recent node versions have extensive support for ES201X syntax.
-          // Also, we have disabled modules transpilation as webpack will
-          // take care of that for us ensuring tree shaking takes place.
-          // NOTE: Make sure you use the same node version for development
-          // and production.
-          target === 'server'
-            ? ['env', { targets: { node: true }, modules: false }]
-            : null,
-        ].filter(x => x != null),
-
-        plugins: [
-          // Required to support react hot loader.
-          mode === 'development'
-            ? 'react-hot-loader/babel'
-            : null,
-          // This decorates our components with  __self prop to JSX elements,
-          // which React will use to generate some runtime warnings.
-          mode === 'development'
-            ? 'transform-react-jsx-self'
-            : null,
-          // Adding this will give us the path to our components in the
-          // react dev tools.
-          mode === 'development'
-            ? 'transform-react-jsx-source'
-            : null,
-          // The following plugin supports the code-split-component
-          // instances, taking care of all the heavy boilerplate that we
-          // would have had to do ourselves to get code splitting w/SSR
-          // support working.
-          // @see https://github.com/ctrlplusb/code-split-component
-          //
-          // We only include it in production as this library does not support
-          // React Hot Loader, which we use in development.
-          mode === 'production' && (target === 'server' || target === 'client')
-            ? [
-              'code-split-component/babel',
-              {
-                // For our server bundle we will set the mode as being 'server'
-                // which will ensure that our code split components can be
-                // resolved synchronously, being much more helpful for
-                // pre-rendering.
-                mode: target,
-              },
-            ]
-            : null,
-        ].filter(x => x != null),
-      };
+      return babelConfig;
     },
 
     // This plugin allows you to provide final adjustments your webpack
@@ -416,8 +354,9 @@ const config = {
     // This function will be called once for each for your bundles.  It will be
     // provided the current webpack config, as well as the buildOptions which
     // detail which bundle and mode is being targetted for the current function run.
-    webpackConfig: (webpackConfig: Object, buildOptions : BuildOptions) => {
-      const { target, mode } = buildOptions; // eslint-disable-line no-unused-vars
+    webpackConfig: (webpackConfig, buildOptions) => {
+      // eslint-disable-next-line no-unused-vars
+      const { target, mode } = buildOptions;
 
       // Example:
       /*

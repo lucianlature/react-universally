@@ -1,5 +1,3 @@
-/* @flow */
-
 import path from 'path';
 import { sync as globSync } from 'glob';
 import webpack from 'webpack';
@@ -12,7 +10,6 @@ import appRootDir from 'app-root-dir';
 import WebpackMd5Hash from 'webpack-md5-hash';
 import CodeSplitPlugin from 'code-split-component/webpack';
 import { removeEmpty, ifElse, merge, happyPackPlugin } from '../utils';
-import type { BuildOptions } from '../types';
 import config, { clientConfig } from '../../config';
 
 /**
@@ -29,7 +26,7 @@ import config, { clientConfig } from '../../config';
  * need for you to create multiple web bundles.  Therefore we are avoiding this
  * level of abstraction to keep the config factory as simple as possible.
  */
-export default function webpackConfigFactory(buildOptions: BuildOptions) {
+export default function webpackConfigFactory(buildOptions) {
   const { target, mode } = buildOptions;
   console.log(`==> Creating webpack config for "${target}" in "${mode}" mode`);
 
@@ -86,7 +83,13 @@ export default function webpackConfigFactory(buildOptions: BuildOptions) {
           // loaders, e.g. CSS or SASS.
           // For these cases please make sure that the file extensions are
           // registered within the following configuration setting.
-          { whitelist: config.nodeBundlesIncludeNodeModuleFileTypes },
+          { whitelist:
+              // We always want the source-map-support excluded.
+              ['source-map-support/register'].concat(
+                // Then exclude any items specified in the config.
+                config.nodeBundlesIncludeNodeModuleFileTypes || [],
+              ),
+          },
         ),
       ),
     ]),
@@ -131,6 +134,10 @@ export default function webpackConfigFactory(buildOptions: BuildOptions) {
       // This makes importing of the output module as simple as:
       //   import server from './build/server';
       index: removeEmpty([
+        // This grants us source map support, which combined with our webpack
+        // source maps will give us nice stack traces for our node executed
+        // bundles.
+        ifNode('source-map-support/register'),
         // Required to support hot reloading of our client.
         // ifDevClient('react-hot-loader/patch'),
         // Required to support hot reloading of our client.
@@ -314,7 +321,76 @@ export default function webpackConfigFactory(buildOptions: BuildOptions) {
         // We will use babel to do all our JS processing.
         loaders: [{
           path: 'babel-loader',
-          query: config.plugins.babelConfig(buildOptions),
+          // We will create a babel config and pass it through the plugin
+          // defined in the project configuration, allowing additional
+          // items to be added.
+          query: config.plugins.babelConfig(
+            // Our "standard" babel config.
+            {
+              // We need to ensure that we do this otherwise the babelrc will
+              // get interpretted and for the current configuration this will mean
+              // that it will kill our webpack treeshaking feature as the modules
+              // transpilation has not been disabled within in.
+              babelrc: false,
+
+              presets: [
+                // JSX
+                'react',
+                // Stage 3 javascript syntax.
+                // "Candidate: complete spec and initial browser implementations."
+                // Add anything lower than stage 3 at your own risk. :)
+                'stage-3',
+                // For our client bundles we transpile all the latest ratified
+                // ES201X code into ES5, safe for browsers.  We exclude module
+                // transilation as webpack takes care of this for us, doing
+                // tree shaking in the process.
+                ifClient(['latest', { es2015: { modules: false } }]),
+                // For a node bundle we use the awesome babel-preset-env which
+                // acts like babel-preset-latest in that it supports the latest
+                // ratified ES201X syntax, however, it will only transpile what
+                // is necessary for a target environment.  We have configured it
+                // to target our current node version.  This is cool because
+                // recent node versions have extensive support for ES201X syntax.
+                // Also, we have disabled modules transpilation as webpack will
+                // take care of that for us ensuring tree shaking takes place.
+                // NOTE: Make sure you use the same node version for development
+                // and production.
+                ifNode(['env', { targets: { node: true }, modules: false }]),
+              ].filter(x => x != null),
+
+              plugins: [
+                // Required to support react hot loader.
+                ifDevClient('react-hot-loader/babel'),
+                // This decorates our components with  __self prop to JSX elements,
+                // which React will use to generate some runtime warnings.
+                ifDev('transform-react-jsx-self'),
+                // Adding this will give us the path to our components in the
+                // react dev tools.
+                ifDev('transform-react-jsx-source'),
+                // The following plugin supports the code-split-component
+                // instances, taking care of all the heavy boilerplate that we
+                // would have had to do ourselves to get code splitting w/SSR
+                // support working.
+                // @see https://github.com/ctrlplusb/code-split-component
+                //
+                // We only include it in production as this library does not support
+                // React Hot Loader, which we use in development.
+                ifElse(isProd && (isServer || isClient))(
+                  [
+                    'code-split-component/babel',
+                    {
+                      // For our server bundle we will set the mode as being 'server'
+                      // which will ensure that our code split components can be
+                      // resolved synchronously, being much more helpful for
+                      // pre-rendering.
+                      mode: target,
+                    },
+                  ],
+                ),
+              ].filter(x => x != null),
+            },
+            buildOptions,
+          ),
         }],
       }),
 

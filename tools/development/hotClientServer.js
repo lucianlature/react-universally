@@ -1,5 +1,3 @@
-/* @flow */
-
 import express from 'express';
 import createWebpackMiddleware from 'webpack-dev-middleware';
 import createWebpackHotMiddleware from 'webpack-hot-middleware';
@@ -7,10 +5,7 @@ import ListenerManager from './listenerManager';
 import { log } from '../utils';
 
 class HotClientServer {
-  webpackDevMiddleware: any;
-  listenerManager: ListenerManager;
-
-  constructor(compiler : Object) {
+  constructor(compiler) {
     const app = express();
 
     const httpPathRegex = /^https?:\/\/(.*):([\d]{1,5})/i;
@@ -21,7 +16,8 @@ class HotClientServer {
       );
     }
 
-    const [_, host, port] = httpPathRegex.exec(httpPath); // eslint-disable-line no-unused-vars
+    // eslint-disable-next-line no-unused-vars
+    const [_, host, port] = httpPathRegex.exec(httpPath);
 
     this.webpackDevMiddleware = createWebpackMiddleware(compiler, {
       quiet: true,
