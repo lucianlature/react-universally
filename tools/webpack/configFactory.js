@@ -360,8 +360,6 @@ export default function webpackConfigFactory(buildOptions) {
               ].filter(x => x != null),
 
               plugins: [
-                // Required to support react hot loader.
-                ifDevClient('react-hot-loader/babel'),
                 // This decorates our components with  __self prop to JSX elements,
                 // which React will use to generate some runtime warnings.
                 ifDev('transform-react-jsx-self'),
