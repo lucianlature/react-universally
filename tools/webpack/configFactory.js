@@ -138,6 +138,9 @@ export default function webpackConfigFactory(buildOptions) {
         // source maps will give us nice stack traces for our node executed
         // bundles.
         ifNode('source-map-support/register'),
+        // Enable devtools. You can reduce the size of your app by only including this
+        // module in development builds. eg.
+        ifDevClient('preact/devtools'),
         // Required to support hot reloading of our client.
         ifDevClient(() => `webpack-hot-middleware/client?reload=true&path=http://${config.host}:${config.clientDevServerPort}/__webpack_hmr`),
         // We are using polyfill.io instead of the very heavy babel-polyfill.

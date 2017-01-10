@@ -1,9 +1,5 @@
 /* eslint-disable no-console */
 
-// This grants us source map support, which combined with our webpack source
-// maps will give us nice stack traces.
-import 'source-map-support/register';
-
 import express from 'express';
 import compression from 'compression';
 import { resolve as pathResolve } from 'path';
