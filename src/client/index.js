@@ -4,13 +4,7 @@ import React from 'react';
 import { render } from 'react-dom';
 import { BrowserRouter } from 'react-router';
 import { CodeSplitProvider, rehydrateState } from 'code-split-component';
-// import ReactHotLoader from './components/ReactHotLoader';
 import DemoApp from '../shared/components/DemoApp';
-
-// Enable devtools. You can reduce the size of your app by only including this
-// module in development builds. eg. In Webpack, wrap this with an `if (module.hot) {...}`
-// check.
-require('preact/devtools');
 
 // Get the DOM Element that will host our React application.
 const container = document.querySelector('#app');

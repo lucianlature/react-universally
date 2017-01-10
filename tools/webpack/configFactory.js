@@ -139,8 +139,6 @@ export default function webpackConfigFactory(buildOptions) {
         // bundles.
         ifNode('source-map-support/register'),
         // Required to support hot reloading of our client.
-        // ifDevClient('react-hot-loader/patch'),
-        // Required to support hot reloading of our client.
         ifDevClient(() => `webpack-hot-middleware/client?reload=true&path=http://${config.host}:${config.clientDevServerPort}/__webpack_hmr`),
         // We are using polyfill.io instead of the very heavy babel-polyfill.
         // Therefore we need to add the regenerator-runtime as the babel-polyfill
@@ -566,8 +564,6 @@ export default function webpackConfigFactory(buildOptions) {
               path.resolve(appRootDir.get(), srcPath),
             ),
             ifProdClient(path.resolve(appRootDir.get(), 'src/html')),
-            // preact-compat has some es6 requirements. :)
-            // path.resolve(appRootDir.get(), './node_modules/preact-compat'),
           ]),
         },
 
