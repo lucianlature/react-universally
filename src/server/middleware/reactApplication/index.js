@@ -1,6 +1,4 @@
-
 import 'module-alias/register';
-import type { $Request, $Response, Middleware } from 'express';
 
 import React from 'react';
 import renderToString from 'preact-render-to-string';
