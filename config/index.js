@@ -244,33 +244,6 @@ const config = {
           'react-router',
         ],
 
-        // Which libaries should be excluded when interpreting the package.json
-        // dependencies?
-        //
-        // You should exclude dependencies meant for a server/node process and
-        // you should also exclude modules that may contain files requiring a
-        // webpack loader to parse them (e.g. CSS/SASS etc).
-        exclude: [
-          // Requires webpack loaders:
-          'normalize.css',
-
-          // Only used by node/server:
-          'app-root-dir',
-          'colors',
-          'compression',
-          'dotenv',
-          'express',
-          'helmet',
-          'hpp',
-          'offline-plugin',
-          'module-alias',
-          'preact-render-to-string',
-          'serialize-javascript',
-          'source-map-support',
-          'uuid',
-          'user-home',
-        ],
-
         // The name of the vendor DLL.
         name: '__dev_vendor_dll__',
       },
