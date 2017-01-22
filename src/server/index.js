@@ -1,7 +1,9 @@
 /* eslint-disable no-console */
 
+import fs from 'fs';
 import express from 'express';
 import compression from 'compression';
+import spdy from 'spdy';
 import { resolve as pathResolve } from 'path';
 import appRootDir from 'app-root-dir';
 import reactApplication from './middleware/reactApplication';
@@ -51,8 +53,14 @@ app.get('*', reactApplication);
 // Error Handler middlewares.
 app.use(...errorHandlers);
 
-// Create an http listener for our express app.
-const listener = app.listen(config.port, config.host, () =>
+// Include the SSL certificate
+const sslOptions = {
+  key: fs.readFileSync(pathResolve(appRootDir.get(), config.SSLCertificate.keyPath)),
+  cert: fs.readFileSync(pathResolve(appRootDir.get(), config.SSLCertificate.certPath)),
+};
+
+// Create a spdy listener for our express app.
+const listener = spdy.createServer(sslOptions, app).listen(config.port, config.host, () =>
   console.log(`Server listening on port ${config.port}`),
 );
 
