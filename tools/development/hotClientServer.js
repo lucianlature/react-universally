@@ -39,14 +39,13 @@ class HotClientServer {
     app.use(this.webpackDevMiddleware);
     app.use(createWebpackHotMiddleware(compiler));
 
-    // Include the SSL certificate
-    const sslOptions = {
-      key: fs.readFileSync(pathResolve(appRootDir.get(), config.SSLCertificate.keyPath)),
-      cert: fs.readFileSync(pathResolve(appRootDir.get(), config.SSLCertificate.certPath)),
-    };
-
     // Create a spdy listener for our express app.
-    const listener = spdy.createServer(sslOptions, app).listen(port, host);
+    const listener = config.SSLCertificate
+      ? spdy.createServer({
+        key: fs.readFileSync(pathResolve(appRootDir.get(), config.sslCertificate.keyPath)),
+        cert: fs.readFileSync(pathResolve(appRootDir.get(), config.sslCertificate.certPath)),
+      }, app).listen(port, host)
+      : app.listen(port, host);
 
     this.listenerManager = new ListenerManager(listener, 'client');
 

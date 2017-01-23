@@ -56,6 +56,8 @@ export default function webpackConfigFactory(buildOptions) {
     throw new Error('No bundle configuration exists for target:', target);
   }
 
+  const protocol = config.SSLCertificate ? 'https' : 'http';
+
   const webpackConfig = {
     target: isClient
       // Only our client bundle will target the web as a runtime.
@@ -141,7 +143,7 @@ export default function webpackConfigFactory(buildOptions) {
         // Required to support hot reloading of our client.
         ifDevClient('react-hot-loader/patch'),
         // Required to support hot reloading of our client.
-        ifDevClient(() => `webpack-hot-middleware/client?reload=true&path=https://${config.host}:${config.clientDevServerPort}/__webpack_hmr`),
+        ifDevClient(() => `webpack-hot-middleware/client?reload=true&path=${protocol}://${config.host}:${config.clientDevServerPort}/__webpack_hmr`),
         // We are using polyfill.io instead of the very heavy babel-polyfill.
         // Therefore we need to add the regenerator-runtime as the babel-polyfill
         // included this, which polyfill.io doesn't include.
@@ -183,7 +185,7 @@ export default function webpackConfigFactory(buildOptions) {
         publicPath: ifDev(
           // As we run a seperate development server for our client and server
           // bundles we need to use an absolute http path for the public path.
-          `https://${config.host}:${config.clientDevServerPort}${config.bundles.client.webPath}`,
+          `${protocol}://${config.host}:${config.clientDevServerPort}${config.bundles.client.webPath}`,
           // Otherwise we expect our bundled client to be served from this path.
           bundleConfig.webPath,
         ),
@@ -625,7 +627,7 @@ export default function webpackConfigFactory(buildOptions) {
             publicPath: isDev
               // When running in dev mode the client bundle runs on a
               // seperate port so we need to put an absolute path here.
-              ? `https://${config.host}:${config.clientDevServerPort}${config.bundles.client.webPath}`
+              ? `${protocol}://${config.host}:${config.clientDevServerPort}${config.bundles.client.webPath}`
               // Otherwise we just use the configured web path for the client.
               : config.bundles.client.webPath,
             // We only emit files when building a web bundle, for the server

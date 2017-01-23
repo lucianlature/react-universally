@@ -53,14 +53,16 @@ app.get('*', reactApplication);
 // Error Handler middlewares.
 app.use(...errorHandlers);
 
-// Include the SSL certificate
-const sslOptions = {
-  key: fs.readFileSync(pathResolve(appRootDir.get(), config.SSLCertificate.keyPath)),
-  cert: fs.readFileSync(pathResolve(appRootDir.get(), config.SSLCertificate.certPath)),
-};
+const listener = config.SSLCertificate
+  // Create a spdy listener for our express app.
+  // Include the SSL certificate options
+  ? spdy.createServer({
+    key: fs.readFileSync(pathResolve(appRootDir.get(), config.sslCertificate.keyPath)),
+    cert: fs.readFileSync(pathResolve(appRootDir.get(), config.sslCertificate.certPath)),
+  }, app)
+  : app;
 
-// Create a spdy listener for our express app.
-const listener = spdy.createServer(sslOptions, app).listen(config.port, config.host, () =>
+listener.listen(config.port, config.host, () =>
   console.log(`Server listening on port ${config.port}`),
 );
 

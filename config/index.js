@@ -5,7 +5,7 @@
 // Note: all file/folder paths should be relative to the project root. The
 // absolute paths should be resolved during runtime by our build tools/server.
 
-import { getStringEnvVar, getIntEnvVar } from './internals/environmentVars';
+import { getStringEnvVar, getIntEnvVar, getBoolVar } from './internals/environmentVars';
 import filterObject from './internals/filterObject';
 
 
@@ -31,6 +31,9 @@ const config = {
 
   // Disable server side rendering?
   disableSSR: false,
+
+  // Enable SSL certification?
+  SSLCertificate: getBoolVar('SSL_CERTIFICATE', true),
 
   // How long should we set the browser cache for the served assets?
   // Don't worry, we add hashes to the files, so if they change the new files
@@ -140,8 +143,7 @@ const config = {
     offlinePageFileName: 'offline.html',
   },
 
-  SSLCertificate: {
-    enabled: true,
+  sslCertificate: {
     keyPath: './server.key',
     certPath: './server.crt',
   },
